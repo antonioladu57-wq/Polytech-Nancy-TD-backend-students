@@ -43,7 +43,7 @@ public class Application {
         // Matcher pour récupérer l'ID dans l'URL (ex: /tasks/12)
         Matcher m = ID_PATH.matcher(path);
 
-        //region GET /tasks (avec paramètre optionnel todo-only)
+        //region GET /tasks (avec paramètre optionnel)
         if ("GET".equals(method) && "/tasks".equals(path)) {
             boolean todoOnly = nonNull(query) && query.contains("todo-only=true");
             Collection<Task> tasks = dao.findAll(todoOnly);
