@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,8 +38,26 @@ public class Application {
     private static void handleTasks(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
+        String query = exchange.getRequestURI().getQuery();
 
-        //region Manage POST /tasks
+        // Matcher pour récupérer l'ID dans l'URL (ex: /tasks/12)
+        Matcher m = ID_PATH.matcher(path);
+
+        //region GET /tasks (avec paramètre optionnel todo-only)
+        if ("GET".equals(method) && "/tasks".equals(path)) {
+            boolean todoOnly = nonNull(query) && query.contains("todo-only=true");
+            Collection<Task> tasks = dao.findAll(todoOnly);
+
+            if (tasks.isEmpty()) {
+                sendResponse(exchange, 204, null);
+            } else {
+                sendResponse(exchange, 200, JsonUtils.serialize(tasks));
+            }
+            return;
+        }
+        //endregion
+
+        //region POST /tasks
         if ("POST".equals(method) && "/tasks".equals(path)) {
             Task input = JsonUtils.deserialize(new String(exchange.getRequestBody().readAllBytes(), UTF_8), Task.class);
             Task createdTask = dao.save(input);
@@ -49,8 +68,7 @@ public class Application {
         }
         //endregion
 
-        //region Manage GET /tasks/{id}
-        Matcher m = ID_PATH.matcher(path);
+        //region GET /tasks/{id}
         if ("GET".equals(method) && m.matches()) {
             int id = Integer.parseInt(m.group(1));
             Optional<Task> task = dao.findById(id);
@@ -64,12 +82,47 @@ public class Application {
         }
         //endregion
 
-        // Otherwise → 404
+        //region DELETE /tasks/{id}
+        if ("DELETE".equals(method) && m.matches()) {
+            int id = Integer.parseInt(m.group(1));
+            boolean deleted = dao.deleteById(id);
+
+            if (deleted) {
+                sendResponse(exchange, 204, null);
+            } else {
+                sendResponse(exchange, 404, null);
+            }
+            return;
+        }
+        //endregion
+
+        //region PUT /tasks/{id}
+        if ("PUT".equals(method) && m.matches()) {
+            int id = Integer.parseInt(m.group(1));
+            Optional<Task> existingTask = dao.findById(id);
+
+            if (existingTask.isPresent()) {
+                // On récupère le corps JSON pour construire la nouvelle tâche
+                Task input = JsonUtils.deserialize(new String(exchange.getRequestBody().readAllBytes(), UTF_8), Task.class);
+
+                // On s'assure que l'ID de l'URL est bien conservé dans l'objet Task sauvegardé
+                Task updatedTask = new Task(id, input.title(), input.description(), input.done());
+                dao.save(updatedTask);
+
+                sendResponse(exchange, 204, null);
+            } else {
+                sendResponse(exchange, 404, null);
+            }
+            return;
+        }
+        //endregion
+
+        // Sinon → 404
         sendResponse(exchange, 404, null);
     }
 
     private static void sendResponse(HttpExchange exchange, int status, String json) throws IOException {
-        if(nonNull(json)) {
+        if (nonNull(json)) {
             exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
             byte[] bytes = json.getBytes(UTF_8);
             exchange.sendResponseHeaders(status, bytes.length);
@@ -77,7 +130,7 @@ public class Application {
                 os.write(bytes);
             }
         } else {
-            exchange.sendResponseHeaders(status, 0);
+            exchange.sendResponseHeaders(status, -1); // Utiliser -1 pour indiquer l'absence de corps HTTP
             exchange.close();
         }
     }

@@ -1,8 +1,10 @@
 package com.example.todoapp;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Data Access Object for {@link Task} model.
@@ -34,5 +36,28 @@ public class TaskDao {
      */
     public Optional<Task> findById(int id) {
         return Optional.ofNullable(storage.get(id));
+    }
+
+    /**
+     * Retrieve all tasks.
+     * @param todoOnly if true, returns only tasks where done is false.
+     * @return Collection of tasks.
+     */
+    public Collection<Task> findAll(boolean todoOnly) {
+        if (todoOnly) {
+            return storage.values().stream()
+                    .filter(task -> !task.done())
+                    .collect(Collectors.toList());
+        }
+        return storage.values();
+    }
+
+    /**
+     * Delete a task by id.
+     * @param id identifier of the {@link Task}.
+     * @return true if the task was removed, false otherwise.
+     */
+    public boolean deleteById(int id) {
+        return storage.remove(id) != null;
     }
 }
