@@ -60,4 +60,17 @@ public class TaskDao {
     public boolean deleteById(int id) {
         return storage.remove(id) != null;
     }
+    /**
+     * Supprime toutes les tâches de l'entrepôt mémoire.
+     */
+    public void clearAll() {
+        storage.clear();
+    }
+
+    /**
+     * Retourne le nombre total de tâches.
+     */
+    public int count() {
+        return storage.size();
+    }
 }

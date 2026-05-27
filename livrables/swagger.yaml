@@ -1,4 +1,4 @@
-openapi: 3.0.3
+sopenapi: 3.0.3
 info:
     title: TODO API
     version: 1.0.0
@@ -60,6 +60,14 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Task'
+        delete:
+            tags: [ tasks ]
+            summary: Supprimer TOUTES les tâches (Bonus)
+            description: Supprime l'intégralité des tâches stockées en mémoire.
+            operationId: deleteAllTasks
+            responses:
+                '204':
+                    description: Toutes les tâches ont été supprimées avec succès
 
     /tasks/{id}:
         parameters:
@@ -112,6 +120,21 @@ paths:
                     description: Tâche supprimée avec succès (aucun contenu retourné)
                 '404':
                     description: Tâche non trouvée
+
+    /tasks/count:
+        get:
+            tags: [ tasks ]
+            summary: Compter le nombre de tâches (Bonus)
+            description: Retourne le nombre total de tâches sous la forme d'un entier brut.
+            operationId: countTasks
+            responses:
+                '200':
+                    description: Nombre récupéré avec succès
+                    content:
+                        text/plain:
+                            schema:
+                                type: integer
+                                example: 3
 
 components:
     schemas:

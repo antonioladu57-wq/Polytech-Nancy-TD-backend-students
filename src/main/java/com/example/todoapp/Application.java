@@ -119,6 +119,19 @@ public class Application {
 
         // Sinon → 404
         sendResponse(exchange, 404, null);
+        // DELETE /tasks (Supprime tout)
+        if ("DELETE".equals(method) && "/tasks".equals(path)) {
+            dao.clearAll();
+            log.debug("Toutes les tâches ont été supprimées de l'entrepôt.");
+            sendResponse(exchange, 204, null);
+            return;
+        }
+        // GET /tasks/count (Doit être placé AVANT le matcher d'ID pour éviter les conflits de route)
+        if ("GET".equals(method) && "/tasks/count".equals(path)) {
+            int total = dao.count();
+            sendResponse(exchange, 200, String.valueOf(total)); // Renvoie l'entier brut
+            return;
+        }
     }
 
     private static void sendResponse(HttpExchange exchange, int status, String json) throws IOException {
