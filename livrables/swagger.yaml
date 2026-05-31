@@ -1,162 +1,235 @@
-sopenapi: 3.0.3
+openapi: 3.0.3
 info:
-    title: TODO API
-    version: 1.0.0
-    description: API de gestion d'une TODO List.
+    title: TODO API REST (TD2)
+    version: 2.0.0
+    description: API de gestion d'une TODO List structurée en 3 couches (business et dao) avec validation DTO et base SQLite.
 servers:
-    -   url: http://localhost:8080
-        description: Serveur local de développement
+    - url: http://localhost:8080
+      description: Serveur local de développement
 
 tags:
-    -   name: tasks
-        description: Opérations sur les tâches
+    - name: tasks
+      description: Opérations sur les tâches (TODO list)
 
 paths:
     /tasks:
         get:
             tags: [ tasks ]
-            summary: Récupère l'ensemble des tâches
+            summary: Récupérer l'ensemble des tâches
+            description: Retourne une liste de DTO de toutes les tâches, avec possibilité de filtrer.
             operationId: getAllTasks
             parameters:
-                -   in: query
-                    name: todo-only
-                    required: false
-                    description: Indique s'il faut seulement récupérer les tâches à réaliser.
-                    schema:
-                        type: boolean
-                        default: false
+                - in: query
+                  name: todoOnly
+                  required: false
+                  description: Si vrai, retourne uniquement les tâches non réalisées (done = false).
+                  schema:
+                      type: boolean
+                      default: false
             responses:
                 '200':
-                    description: Liste des tâches récupérée avec succès
+                    description: Liste de tâches récupérée avec succès.
                     content:
                         application/json:
                             schema:
                                 type: array
                                 items:
-                                    $ref: '#/components/schemas/Task'
+                                    $ref: '#/components/schemas/TaskResponse'
                 '204':
-                    description: Pas de résultat (aucune tâche ne correspond)
+                    description: Aucune tâche ne correspond aux critères.
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
 
         post:
             tags: [ tasks ]
-            summary: Créer une tâche
+            summary: Créer une nouvelle tâche
+            description: Crée une tâche à partir du DTO de création. L'id est généré par SQLite et le statut 'done' est initialisé à 'false'.
             operationId: createTask
             requestBody:
                 required: true
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/Task'
+                            $ref: '#/components/schemas/TaskCreateRequest'
             responses:
                 '201':
-                    description: Tâche créée avec succès
+                    description: Tâche créée avec succès.
                     headers:
                         Location:
-                            description: URL de la ressource créée
+                            description: URL d'accès direct à la ressource créée.
                             schema:
                                 type: string
                                 example: /tasks/1
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/Task'
+                                $ref: '#/components/schemas/TaskResponse'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
         delete:
             tags: [ tasks ]
-            summary: Supprimer TOUTES les tâches (Bonus)
-            description: Supprime l'intégralité des tâches stockées en mémoire.
+            summary: Supprimer toutes les tâches (Bonus Global)
+            description: Vide entièrement la table de la base de données.
             operationId: deleteAllTasks
             responses:
                 '204':
-                    description: Toutes les tâches ont été supprimées avec succès
+                    description: Toutes les tâches ont été supprimées avec succès.
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
+    /tasks/count:
+        get:
+            tags: [ tasks ]
+            summary: Compter le nombre de tâches (Bonus)
+            description: Renvoie le nombre total de tâches enregistrées sous forme de texte brut.
+            operationId: countTasks
+            responses:
+                '200':
+                    description: Nombre récupéré avec succès.
+                    content:
+                        text/plain:
+                            schema:
+                                type: integer
+                                example: 3
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
 
     /tasks/{id}:
         parameters:
-            -   in: path
-                name: id
-                required: true
-                description: Identifiant numérique de la tâche
-                schema:
-                    type: integer
-                    minimum: 1
+            - in: path
+              name: id
+              required: true
+              description: Identifiant numérique unique de la tâche.
+              schema:
+                  type: integer
+                  minimum: 1
         get:
             tags: [ tasks ]
-            summary: Récupérer une tâche
-            description: Récupérer une tâche par son identifiant
+            summary: Récupérer une tâche par son ID
             operationId: getTaskById
             responses:
                 '200':
-                    description: Tâche trouvée avec succès
+                    description: Tâche trouvée. Retourne le DTO de la tâche.
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/Task'
+                                $ref: '#/components/schemas/TaskResponse'
                 '404':
-                    description: Tâche non trouvée
+                    description: Tâche introuvable.
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
 
         put:
             tags: [ tasks ]
-            summary: Modifier une tâche
-            description: Modifie une tâche existante à partir d’un JSON.
+            summary: Modifier une tâche existante
+            description: Modifie une tâche à partir du DTO de modification. Valide la structure avant traitement.
             operationId: updateTask
             requestBody:
                 required: true
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/Task'
+                            $ref: '#/components/schemas/TaskUpdateRequest'
             responses:
                 '204':
-                    description: Tâche modifiée avec succès (aucun contenu retourné)
+                    description: Tâche modifiée avec succès. Aucun contenu retourné.
+                '400':
+                    $ref: '#/components/responses/BadRequest'
                 '404':
-                    description: Tâche non trouvée
+                    description: Tâche introuvable pour l'ID fourni.
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
 
         delete:
             tags: [ tasks ]
-            summary: Supprimer une tâche
-            description: Supprime une tâche par son identifiant.
-            operationId: deleteTask
+            summary: Supprimer une tâche par son ID
+            operationId: deleteTaskById
             responses:
                 '204':
-                    description: Tâche supprimée avec succès (aucun contenu retourné)
+                    description: Tâche supprimée avec succès.
                 '404':
-                    description: Tâche non trouvée
-
-    /tasks/count:
-        get:
-            tags: [ tasks ]
-            summary: Compter le nombre de tâches (Bonus)
-            description: Retourne le nombre total de tâches sous la forme d'un entier brut.
-            operationId: countTasks
-            responses:
-                '200':
-                    description: Nombre récupéré avec succès
-                    content:
-                        text/plain:
-                            schema:
-                                type: integer
-                                example: 3
+                    description: Tâche introuvable.
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
 
 components:
+    responses:
+        BadRequest:
+            description: Paramètre ou corps de requête invalide (Validation échouée).
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorDto'
+        InternalServerError:
+            description: Une erreur critique ou inattendue s'est produite sur le serveur.
+
     schemas:
-        Task:
+        TaskCreateRequest:
             type: object
-            description: Représentation d'une tâche
+            description: DTO d'entrée requis pour créer une tâche (L'ID n'est pas fourni et done vaut false).
+            properties:
+                title:
+                    type: string
+                    maxLength: 50
+                    example: "Faire les courses"
+                    description: Le titre de la tâche (Obligatoire, max 50 caractères).
+                description:
+                    type: string
+                    maxLength: 255
+                    example: "Acheter du lait et des œufs"
+                    description: Description libre (Optionnelle, max 255 caractères).
+            required:
+                - title
+
+        TaskUpdateRequest:
+            type: object
+            description: DTO d'entrée requis pour modifier une tâche (Prend en compte le statut).
+            properties:
+                title:
+                    type: string
+                    maxLength: 50
+                    example: "Faire les courses - Modifié"
+                description:
+                    type: string
+                    maxLength: 255
+                    example: "Prendre uniquement du lait écrémé"
+                done:
+                    type: boolean
+                    example: true
+                    description: Statut d'accomplissement de la tâche.
+            required:
+                - title
+                - done
+
+        TaskResponse:
+            type: object
+            description: DTO de sortie standard représentant une tâche renvoyée par l'API.
             properties:
                 id:
                     type: integer
                     example: 1
                 title:
                     type: string
-                    nullable: false
-                    example: Acheter du lait
+                    example: "Faire les courses"
                 description:
                     type: string
-                    nullable: true
-                    example: 2L demi-écrémé
+                    example: "Acheter du lait"
                 done:
                     type: boolean
-                    nullable: false
                     example: false
-            required:
-                - id
-                - title
+
+        ErrorDto:
+            type: object
+            description: DTO d'erreur retourné lors d'un échec de validation (HTTP 400).
+            properties:
+                field:
+                    type: string
+                    example: "title"
+                    description: Nom du paramètre ou du champ qui pose problème.
+                message:
+                    type: string
+                    example: "Le titre ne peut pas dépasser 50 caractères."
+                    description: Détail explicatif sur l'erreur constatée.

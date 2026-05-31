@@ -1,86 +1,60 @@
 {
   "info": {
-    "_postman_id": "96e5ac50-4453-4004-b9f9-404ad21abd19",
-    "name": "Programmation WEB",
-    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "54703112",
-    "_collection_link": "https://go.postman.co/collection/54703112-96e5ac50-4453-4004-b9f9-404ad21abd19?source=collection_link"
+    "_postman_id": "b3c4d5e6-f7a8-9b0c-1d2e-3f4a5b6c7d8e",
+    "name": "Cours initiation dev WEB - TD2 Final",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "/tasks/{id}",
+      "name": "GET /tasks",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/tasks/1",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8080",
-          "path": [
-            "tasks",
-            "1"
-          ]
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "/tasks",
+      "name": "GET /tasks?todoOnly=true",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/tasks?todo-only=true",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8080",
-          "path": [
-            "tasks"
-          ],
+          "raw": "{{baseUrl}}/tasks?todoOnly=true",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"],
           "query": [
             {
-              "key": "todo-only",
+              "key": "todoOnly",
               "value": "true"
             }
           ]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "/tasks/{id}",
+      "name": "GET /tasks/count",
       "request": {
-        "method": "DELETE",
+        "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8080/tasks/1",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8080",
-          "path": [
-            "tasks",
-            "1"
-          ]
+          "raw": "{{baseUrl}}/tasks/count",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "count"]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "/tasks/{id}",
+      "name": "POST /tasks (Succès)",
       "request": {
-        "method": "PUT",
+        "method": "POST",
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "    {\r\n        \"id\": 1,\r\n        \"title\": \"Réviser DS de stat\",\r\n        \"description\": \"Chap 1 / Chap 2 / Chap 3 / Chap 4\",\r\n        \"done\": false\r\n    }",
+          "raw": "{\n    \"title\": \"Réviser le projet web\",\n    \"description\": \"Finaliser l'export Postman et le fichier Swagger\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -88,43 +62,117 @@
           }
         },
         "url": {
-          "raw": "http://localhost:8080/tasks/1",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8080",
-          "path": [
-            "tasks",
-            "1"
-          ]
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "/tasks",
+      "name": "POST /tasks (Erreur 400 - Titre Vide)",
       "request": {
         "method": "POST",
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "    {\r\n        \"id\": 1,\r\n        \"title\": \"Réviser DS de stat\",\r\n        \"description\": \"Chap 1 / Chap 2 / Chap 3 / Chap 4\",\r\n        \"done\": false\r\n    }"
+          "raw": "{\n    \"title\": \"\",\n    \"description\": \"Cette requête doit retourner un code HTTP 400\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
-          "raw": "http://localhost:8080/tasks/1",
-          "protocol": "http",
-          "host": [
-            "localhost"
-          ],
-          "port": "8080",
-          "path": [
-            "tasks",
-            "1"
-          ]
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
         }
-      },
-      "response": []
+      }
+    },
+    {
+      "name": "POST /tasks (Erreur 400 - Titre Trop Long)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Ce titre fait volontairement plus de 50 caracteres de long pour faire crasher la validation\",\n    \"description\": \"Doit retourner un 400 Bad Request\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        }
+      }
+    },
+    {
+      "name": "GET /tasks/{id}",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "1"]
+        }
+      }
+    },
+    {
+      "name": "PUT /tasks/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Réviser le projet web - Terminé\",\n    \"description\": \"Tout est au vert !\",\n    \"done\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "1"]
+        }
+      }
+    },
+    {
+      "name": "DELETE /tasks/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "1"]
+        }
+      }
+    },
+    {
+      "name": "DELETE /tasks (Global)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
     }
   ]
 }
